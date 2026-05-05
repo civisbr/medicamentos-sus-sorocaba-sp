@@ -1,0 +1,16 @@
+[
+  {
+    "cnpj": "46634044000174",
+    "dados_api": {"situacao_cadastral": 2, "descricao_situacao_cadastral": "ATIVA",
+                  "data_inicio_atividade": "1974-12-19", "razao_social": "DISTRIBUIDORA FARMA SOROCABA LTDA"},
+    "flags_risco": [],
+    "data_empenho_referencia": "2023-03-15"
+  },
+  {
+    "cnpj": "12345678000195",
+    "dados_api": {"situacao_cadastral": 2, "descricao_situacao_cadastral": "ATIVA",
+                  "data_inicio_atividade": "2022-12-01", "razao_social": "MEDPHARMA NOVA LTDA"},
+    "flags_risco": ["empresa_nova"],
+    "data_empenho_referencia": "2023-03-15"
+  }
+]

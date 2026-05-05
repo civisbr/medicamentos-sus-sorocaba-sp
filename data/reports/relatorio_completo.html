@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de Alertas de Sobrepreço — Medicamentos SUS 2023</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #111827;
+    background: #fff;
+  }
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+  }
+  /* Header */
+  .header {
+    background: #F3F4F6;
+    padding: 24px;
+    border-bottom: 2px solid #1D4ED8;
+    margin-bottom: 24px;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #1D4ED8;
+  }
+  .header .subtitle {
+    font-size: 14px;
+    font-weight: 400;
+    color: #6B7280;
+    margin-top: 8px;
+  }
+  /* Disclaimer */
+  .disclaimer {
+    border-left: 4px solid #F59E0B;
+    background: #FFFBEB;
+    padding: 16px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    font-weight: 400;
+  }
+  /* Narrativa IA */
+  .narrativa-ia {
+    border-left: 4px solid #1D4ED8;
+    background: #fff;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  .narrativa-ia .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+    margin-bottom: 8px;
+  }
+  /* Cards de resumo */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 640px) {
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .card {
+    background: #F3F4F6;
+    border-radius: 4px;
+    padding: 16px;
+  }
+  .card .numero {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #111827;
+  }
+  .card .numero.critico { color: #DC2626; }
+  .card .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+    margin-top: 4px;
+  }
+  /* Download CSV */
+  .download-area {
+    text-align: right;
+    margin-bottom: 16px;
+  }
+  .btn-download {
+    display: inline-block;
+    background: #1D4ED8;
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .btn-download:hover { background: #1e40af; }
+  /* Tabela de alertas */
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 16px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 32px;
+  }
+  th {
+    background: #F3F4F6;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    padding: 8px;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+  }
+  th:hover { background: #e5e7eb; }
+  th .sort-icon {
+    color: #9CA3AF;
+    margin-left: 4px;
+  }
+  th .sort-icon.active { color: #1D4ED8; }
+  td {
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+  }
+  tr:nth-child(odd) td { background: #fff; }
+  tr:nth-child(even) td { background: #F3F4F6; }
+  tr:hover td { background: #EFF6FF; }
+  td.right { text-align: right; font-variant-numeric: tabular-nums; }
+  td.col-valor { text-align: right; font-variant-numeric: tabular-nums; }
+  /* Badges de tier */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-critico { background: #FEE2E2; color: #991B1B; }
+  .badge-alerta { background: #FEF3C7; color: #92400E; }
+  .badge-atencao { background: #FFF7ED; color: #9A3412; }
+  .badge-sem-referencia { background: #F3F4F6; color: #6B7280; }
+  .badge-suspeito { background: #EDE9FE; color: #5B21B6; }
+  /* Variacao percentual */
+  .variacao-alta { color: #DC2626; }
+  /* Estado vazio */
+  .empty-state {
+    text-align: center;
+    color: #6B7280;
+    padding: 32px;
+    font-style: italic;
+  }
+  /* Flags fornecedores */
+  .flag-nova { background: #FEF3C7; color: #92400E; }
+  .flag-irregular { background: #FEE2E2; color: #991B1B; }
+  /* Rodapé */
+  footer {
+    border-top: 1px solid #e5e7eb;
+    padding: 16px 0;
+    margin-top: 32px;
+    font-size: 12px;
+    color: #6B7280;
+  }
+  footer a { color: #1D4ED8; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 1. Header -->
+  <div class="header">
+    <h1>Relatório de Alertas de Sobrepreço — Medicamentos SUS</h1>
+    <p class="subtitle">Município de Sorocaba · Ano 2023 · Gerado em 2026-05-05T13:10:08.487398</p>
+  </div>
+
+  <!-- 2. Disclaimer Legal -->
+  <div class="disclaimer">
+    Este relatório apresenta alertas para investigação, não conclusões de ilegalidade.
+    Os dados são públicos e provêm do Portal de Transparência de Sorocaba e do BPS/Ministério da Saúde.
+  </div>
+
+  <!-- 3. Narrativa IA (condicional) -->
+  
+
+  <!-- 4. Cards de Resumo -->
+  <div class="cards-grid">
+    <div class="card">
+      <div class="numero">3</div>
+      <div class="label">Empenhos analisados</div>
+    </div>
+    <div class="card">
+      <div class="numero">0</div>
+      <div class="label">Alertas CRÍTICOS</div>
+    </div>
+    <div class="card">
+      <div class="numero">R$ 0.00</div>
+      <div class="label">Valor total excedente (R$)</div>
+    </div>
+    <div class="card">
+      <div class="numero">2</div>
+      <div class="label">Fornecedores suspeitos</div>
+    </div>
+  </div>
+
+  <!-- 5. Tabela de Alertas -->
+  <h2 class="section-title">Alertas de Sobrepreço</h2>
+
+  <!-- 6. Botão Download CSV -->
+  <div class="download-area">
+    <a href="data:text/csv;charset=utf-8,%23%20Dados%20p%C3%BAblicos%20%E2%80%94%20Portal%20Transpar%C3%AAncia%20Sorocaba%20%C2%B7%20BPS/MS%20%C2%B7%20Gerado%20por%20MedAudit%20SUS.%20Este%20arquivo%20apresenta%20alertas%20para%20investiga%C3%A7%C3%A3o%2C%20n%C3%A3o%20conclus%C3%B5es%20de%20ilegalidade.%0Anr_empenho%2Cdata_empenho%2Cdescricao_item%2Ccatmat_codigo%2Ccnpj_fornecedor%2Cnome_fornecedor%2Cpreco_unitario_pago%2Cpreco_bps_mediana%2Cvariacao_percentual%2Cnivel_alerta%2Cvalor_excedente_total%2Cqt_registros_bps%0A2023NE001234%2C2023-03-15%2CAMOXICILINA%20500%20MG%20CAPSULAS%2C%2C46634044000174%2CDISTRIBUIDORA%20FARMA%20SOROCABA%20LTDA%2C45600.0%2C%2C%2CSEM_REFER%C3%8ANCIA%2C0.0%2C0%0A2023NE002891%2C2023-06-20%2CATORVASTATINA%2020%20MG%20COMPRIMIDO%20E%20LOSARTANA%2050%20MG%20COMPRIMIDO%2C%2C11222333000181%2CMEDPHARMA%20COMERCIO%20DE%20MEDICAMENTOS%20EIRELI%2C128750.0%2C%2C%2CSEM_REFER%C3%8ANCIA%2C0.0%2C0%0A2023NE005502%2C2023-09-05%2CDIPIRONA%20SODICA%20500%20MG/ML%20SOLUCAO%20INJETAVEL%202%20ML%20E%20ONDANSETRONA%202%20MG/ML%2C%2C46634044000174%2CDISTRIBUIDORA%20FARMA%20SOROCABA%20LTDA%2C320000.0%2C%2C%2CSEM_REFER%C3%8ANCIA%2C0.0%2C0%0A" download="alertas_2023.csv" class="btn-download">
+      Baixar CSV completo (1 KB)
+    </a>
+  </div>
+
+  
+  <table id="alerts">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)" scope="col">Item <span class="sort-icon" id="si-0">↕</span></th>
+        <th onclick="sortTable(1)" scope="col">Fornecedor <span class="sort-icon" id="si-1">↕</span></th>
+        <th onclick="sortTable(2)" scope="col">CNPJ <span class="sort-icon" id="si-2">↕</span></th>
+        <th onclick="sortTable(3)" scope="col">Preço Pago <span class="sort-icon" id="si-3">↕</span></th>
+        <th onclick="sortTable(4)" scope="col">Preço BPS <span class="sort-icon" id="si-4">↕</span></th>
+        <th onclick="sortTable(5)" scope="col">Desvio % <span class="sort-icon" id="si-5">↕</span></th>
+        <th onclick="sortTable(6)" scope="col">Tier <span class="sort-icon" id="si-6">↕</span></th>
+        <th onclick="sortTable(7)" scope="col">Val. Excedente <span class="sort-icon" id="si-7">↕</span></th>
+        <th onclick="sortTable(8)" scope="col">Narrativa IA <span class="sort-icon" id="si-8">↕</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      
+      <tr>
+        <td data-val="AMOXICILINA 500 MG CAPSULAS">AMOXICILINA 500 MG CAPSULAS</td>
+        <td data-val="DISTRIBUIDORA FARMA SOROCABA LTDA">DISTRIBUIDORA FARMA SOROCABA LTDA</td>
+        <td data-val="46634044000174">46634044000174</td>
+        <td class="right" data-val="45600.0">R$ 45600.00</td>
+        <td class="right" data-val="nan">R$ nan</td>
+        <td class="right" data-val="nan">
+          
+          nan%
+        </td>
+        <td data-val="SEM_REFERÊNCIA">
+          
+          
+            <span class="badge badge-sem-referencia" aria-label="Nível: SEM_REFERÊNCIA">SEM_REFERÊNCIA</span>
+          
+        </td>
+        <td class="col-valor" data-val="0.0">
+          R$ 0.00
+        </td>
+        <td data-val="">
+          
+          
+        </td>
+      </tr>
+      
+      <tr>
+        <td data-val="ATORVASTATINA 20 MG COMPRIMIDO E LOSARTANA 50 MG COMPRIMIDO">ATORVASTATINA 20 MG COMPRIMIDO E LOSARTANA 50 MG COMPRIMIDO</td>
+        <td data-val="MEDPHARMA COMERCIO DE MEDICAMENTOS EIRELI">MEDPHARMA COMERCIO DE MEDICAMENTOS EIRELI</td>
+        <td data-val="11222333000181">11222333000181</td>
+        <td class="right" data-val="128750.0">R$ 128750.00</td>
+        <td class="right" data-val="nan">R$ nan</td>
+        <td class="right" data-val="nan">
+          
+          nan%
+        </td>
+        <td data-val="SEM_REFERÊNCIA">
+          
+          
+            <span class="badge badge-sem-referencia" aria-label="Nível: SEM_REFERÊNCIA">SEM_REFERÊNCIA</span>
+          
+        </td>
+        <td class="col-valor" data-val="0.0">
+          R$ 0.00
+        </td>
+        <td data-val="">
+          
+          
+        </td>
+      </tr>
+      
+      <tr>
+        <td data-val="DIPIRONA SODICA 500 MG/ML SOLUCAO INJETAVEL 2 ML E ONDANSETRONA 2 MG/ML">DIPIRONA SODICA 500 MG/ML SOLUCAO INJETAVEL 2 ML E ONDANSETRONA 2 MG/ML</td>
+        <td data-val="DISTRIBUIDORA FARMA SOROCABA LTDA">DISTRIBUIDORA FARMA SOROCABA LTDA</td>
+        <td data-val="46634044000174">46634044000174</td>
+        <td class="right" data-val="320000.0">R$ 320000.00</td>
+        <td class="right" data-val="nan">R$ nan</td>
+        <td class="right" data-val="nan">
+          
+          nan%
+        </td>
+        <td data-val="SEM_REFERÊNCIA">
+          
+          
+            <span class="badge badge-sem-referencia" aria-label="Nível: SEM_REFERÊNCIA">SEM_REFERÊNCIA</span>
+          
+        </td>
+        <td class="col-valor" data-val="0.0">
+          R$ 0.00
+        </td>
+        <td data-val="">
+          
+          
+        </td>
+      </tr>
+      
+    </tbody>
+  </table>
+  
+
+  <!-- 7. Seção de Fornecedores Suspeitos -->
+  <h2 class="section-title">Fornecedores com Concentração de Alertas</h2>
+
+  
+  <table id="suppliers">
+    <thead>
+      <tr>
+        <th scope="col">Razão Social</th>
+        <th scope="col">CNPJ</th>
+        <th scope="col">Total Alertas</th>
+        <th scope="col">Alertas Críticos</th>
+        <th scope="col">Valor Excedente</th>
+        <th scope="col">Flags</th>
+      </tr>
+    </thead>
+    <tbody>
+      
+      <tr>
+        <td>MEDPHARMA COMERCIO DE MEDICAMENTOS EIRELI</td>
+        <td>11222333000181</td>
+        <td class="right" data-val="1">1</td>
+        <td class="right" data-val="0">0</td>
+        <td class="col-valor" data-val="0.0">
+          R$ 0.00
+        </td>
+        <td>
+          
+          
+        </td>
+      </tr>
+      
+      <tr>
+        <td>DISTRIBUIDORA FARMA SOROCABA LTDA</td>
+        <td>46634044000174</td>
+        <td class="right" data-val="2">2</td>
+        <td class="right" data-val="0">0</td>
+        <td class="col-valor" data-val="0.0">
+          R$ 0.00
+        </td>
+        <td>
+          
+          
+        </td>
+      </tr>
+      
+    </tbody>
+  </table>
+  
+
+  <!-- 8. Rodapé -->
+  <footer>
+    <p>Fontes: Portal de Transparência de Sorocaba · BPS/Ministério da Saúde · CATMAT/ComprasNet</p>
+    <p><a href="docs/METODOLOGIA.md">Ver metodologia completa</a></p>
+  </footer>
+
+</div>
+
+<script>
+const ALERTAS = [{"catmat_codigo": NaN, "cnpj_fornecedor": 46634044000174, "data_empenho": "2023-03-15", "descricao_item": "AMOXICILINA 500 MG CAPSULAS", "nivel_alerta": "SEM_REFER\u00caNCIA", "nome_fornecedor": "DISTRIBUIDORA FARMA SOROCABA LTDA", "nr_empenho": "2023NE001234", "preco_bps_mediana": NaN, "preco_unitario_pago": 45600.0, "qt_registros_bps": 0, "valor_excedente_total": 0.0, "variacao_percentual": NaN}, {"catmat_codigo": NaN, "cnpj_fornecedor": 11222333000181, "data_empenho": "2023-06-20", "descricao_item": "ATORVASTATINA 20 MG COMPRIMIDO E LOSARTANA 50 MG COMPRIMIDO", "nivel_alerta": "SEM_REFER\u00caNCIA", "nome_fornecedor": "MEDPHARMA COMERCIO DE MEDICAMENTOS EIRELI", "nr_empenho": "2023NE002891", "preco_bps_mediana": NaN, "preco_unitario_pago": 128750.0, "qt_registros_bps": 0, "valor_excedente_total": 0.0, "variacao_percentual": NaN}, {"catmat_codigo": NaN, "cnpj_fornecedor": 46634044000174, "data_empenho": "2023-09-05", "descricao_item": "DIPIRONA SODICA 500 MG/ML SOLUCAO INJETAVEL 2 ML E ONDANSETRONA 2 MG/ML", "nivel_alerta": "SEM_REFER\u00caNCIA", "nome_fornecedor": "DISTRIBUIDORA FARMA SOROCABA LTDA", "nr_empenho": "2023NE005502", "preco_bps_mediana": NaN, "preco_unitario_pago": 320000.0, "qt_registros_bps": 0, "valor_excedente_total": 0.0, "variacao_percentual": NaN}];
+const FORNECEDORES = [{"alertas_criticos": 0, "cnpj_fornecedor": 11222333000181, "data_abertura_cnpj": "2020-01-01", "flag_empresa_nova": false, "flag_situacao_irregular": false, "nome_fornecedor": "MEDPHARMA COMERCIO DE MEDICAMENTOS EIRELI", "score_risco": 0.0, "tier_suspeito": false, "total_alertas": 1, "valor_excedente_total": 0.0}, {"alertas_criticos": 0, "cnpj_fornecedor": 46634044000174, "data_abertura_cnpj": "1974-12-19", "flag_empresa_nova": false, "flag_situacao_irregular": false, "nome_fornecedor": "DISTRIBUIDORA FARMA SOROCABA LTDA", "score_risco": 0.0, "tier_suspeito": false, "total_alertas": 2, "valor_excedente_total": 0.0}];
+
+let _sortDir = {col: 7, dir: -1}; // padrão: valor_excedente DESC
+
+function sortTable(col) {
+  const dir = (_sortDir.col === col) ? -_sortDir.dir : -1;
+  _sortDir = {col: col, dir: dir};
+  const tbody = document.querySelector('#alerts tbody');
+  if (!tbody) return;
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.sort(function(a, b) {
+    const va = a.cells[col] ? (a.cells[col].dataset.val !== undefined ? a.cells[col].dataset.val : a.cells[col].textContent) : '';
+    const vb = b.cells[col] ? (b.cells[col].dataset.val !== undefined ? b.cells[col].dataset.val : b.cells[col].textContent) : '';
+    const na = parseFloat(va), nb = parseFloat(vb);
+    if (!isNaN(na) && !isNaN(nb)) return dir * (na - nb);
+    return dir * String(va).localeCompare(String(vb), 'pt-BR');
+  });
+  rows.forEach(function(r) { tbody.appendChild(r); });
+  // Atualizar ícones de ordenação
+  const icons = document.querySelectorAll('.sort-icon');
+  icons.forEach(function(icon, i) {
+    if (i === col) {
+      icon.textContent = dir === -1 ? '▼' : '▲';
+      icon.classList.add('active');
+    } else {
+      icon.textContent = '↕';
+      icon.classList.remove('active');
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  sortTable(7); // ordenar por valor_excedente DESC por padrão
+});
+</script>
+</body>
+</html>

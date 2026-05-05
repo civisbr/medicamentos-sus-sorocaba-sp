@@ -1,0 +1,36 @@
+{
+  "total_empenhos_analisados": 3,
+  "total_alertas": {
+    "SEM_REFERÊNCIA": 3
+  },
+  "valor_total_excedente": 0.0,
+  "top_10_itens_por_excedente": [
+    {
+      "descricao_item": "AMOXICILINA 500 MG CAPSULAS",
+      "valor_excedente_total": 0.0,
+      "nivel_alerta": "SEM_REFERÊNCIA"
+    },
+    {
+      "descricao_item": "ATORVASTATINA 20 MG COMPRIMIDO E LOSARTANA 50 MG COMPRIMIDO",
+      "valor_excedente_total": 0.0,
+      "nivel_alerta": "SEM_REFERÊNCIA"
+    },
+    {
+      "descricao_item": "DIPIRONA SODICA 500 MG/ML SOLUCAO INJETAVEL 2 ML E ONDANSETRONA 2 MG/ML",
+      "valor_excedente_total": 0.0,
+      "nivel_alerta": "SEM_REFERÊNCIA"
+    }
+  ],
+  "top_10_fornecedores_por_excedente": [
+    {
+      "cnpj_fornecedor": "11222333000181",
+      "nome_fornecedor": "MEDPHARMA COMERCIO DE MEDICAMENTOS EIRELI",
+      "valor_excedente_total": 0.0
+    },
+    {
+      "cnpj_fornecedor": "46634044000174",
+      "nome_fornecedor": "DISTRIBUIDORA FARMA SOROCABA LTDA",
+      "valor_excedente_total": 0.0
+    }
+  ]
+}

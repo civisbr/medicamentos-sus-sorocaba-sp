@@ -1,0 +1,64 @@
+{
+  "gerado_em": "2026-05-05T13:10:08.446491",
+  "municipio": "Sorocaba",
+  "ano": 2023,
+  "periodo_analise": {
+    "inicio": "2023-03-15",
+    "fim": "2023-09-05"
+  },
+  "totais": {
+    "empenhos_analisados": 3,
+    "alertas_atencao": 0,
+    "alertas_alerta": 0,
+    "alertas_criticos": 0,
+    "valor_total_excedente": 0.0,
+    "fornecedores_suspeitos": 2
+  },
+  "top_itens": [
+    {
+      "descricao": "AMOXICILINA 500 MG CAPSULAS",
+      "preco_pago": 45600.0,
+      "preco_bps": NaN,
+      "variacao": NaN,
+      "valor_excedente_total": 0.0,
+      "nivel": "SEM_REFERÊNCIA"
+    },
+    {
+      "descricao": "ATORVASTATINA 20 MG COMPRIMIDO E LOSARTANA 50 MG COMPRIMIDO",
+      "preco_pago": 128750.0,
+      "preco_bps": NaN,
+      "variacao": NaN,
+      "valor_excedente_total": 0.0,
+      "nivel": "SEM_REFERÊNCIA"
+    },
+    {
+      "descricao": "DIPIRONA SODICA 500 MG/ML SOLUCAO INJETAVEL 2 ML E ONDANSETRONA 2 MG/ML",
+      "preco_pago": 320000.0,
+      "preco_bps": NaN,
+      "variacao": NaN,
+      "valor_excedente_total": 0.0,
+      "nivel": "SEM_REFERÊNCIA"
+    }
+  ],
+  "top_fornecedores": [
+    {
+      "cnpj": "11222333000181",
+      "razao_social": "MEDPHARMA COMERCIO DE MEDICAMENTOS EIRELI",
+      "total_alertas": 1,
+      "valor_excedente_total": 0.0,
+      "nivel_risco": "False"
+    },
+    {
+      "cnpj": "46634044000174",
+      "razao_social": "DISTRIBUIDORA FARMA SOROCABA LTDA",
+      "total_alertas": 2,
+      "valor_excedente_total": 0.0,
+      "nivel_risco": "False"
+    }
+  ],
+  "distribuicao_alertas": {
+    "ATENÇÃO": 0,
+    "ALERTA": 0,
+    "CRÍTICO": 0
+  }
+}

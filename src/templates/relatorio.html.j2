@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de Alertas de Sobrepreço — Medicamentos SUS {{ ano }}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #111827;
+    background: #fff;
+  }
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+  }
+  /* Header */
+  .header {
+    background: #F3F4F6;
+    padding: 24px;
+    border-bottom: 2px solid #1D4ED8;
+    margin-bottom: 24px;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #1D4ED8;
+  }
+  .header .subtitle {
+    font-size: 14px;
+    font-weight: 400;
+    color: #6B7280;
+    margin-top: 8px;
+  }
+  /* Disclaimer */
+  .disclaimer {
+    border-left: 4px solid #F59E0B;
+    background: #FFFBEB;
+    padding: 16px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    font-weight: 400;
+  }
+  /* Narrativa IA */
+  .narrativa-ia {
+    border-left: 4px solid #1D4ED8;
+    background: #fff;
+    padding: 16px;
+    margin-bottom: 24px;
+  }
+  .narrativa-ia .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+    margin-bottom: 8px;
+  }
+  /* Cards de resumo */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 640px) {
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .card {
+    background: #F3F4F6;
+    border-radius: 4px;
+    padding: 16px;
+  }
+  .card .numero {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: #111827;
+  }
+  .card .numero.critico { color: #DC2626; }
+  .card .label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6B7280;
+    margin-top: 4px;
+  }
+  /* Download CSV */
+  .download-area {
+    text-align: right;
+    margin-bottom: 16px;
+  }
+  .btn-download {
+    display: inline-block;
+    background: #1D4ED8;
+    color: #fff;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .btn-download:hover { background: #1e40af; }
+  /* Tabela de alertas */
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 16px;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 32px;
+  }
+  th {
+    background: #F3F4F6;
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    padding: 8px;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+  }
+  th:hover { background: #e5e7eb; }
+  th .sort-icon {
+    color: #9CA3AF;
+    margin-left: 4px;
+  }
+  th .sort-icon.active { color: #1D4ED8; }
+  td {
+    padding: 8px;
+    border-bottom: 1px solid #e5e7eb;
+    vertical-align: top;
+  }
+  tr:nth-child(odd) td { background: #fff; }
+  tr:nth-child(even) td { background: #F3F4F6; }
+  tr:hover td { background: #EFF6FF; }
+  td.right { text-align: right; font-variant-numeric: tabular-nums; }
+  td.col-valor { text-align: right; font-variant-numeric: tabular-nums; }
+  /* Badges de tier */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .badge-critico { background: #FEE2E2; color: #991B1B; }
+  .badge-alerta { background: #FEF3C7; color: #92400E; }
+  .badge-atencao { background: #FFF7ED; color: #9A3412; }
+  .badge-sem-referencia { background: #F3F4F6; color: #6B7280; }
+  .badge-suspeito { background: #EDE9FE; color: #5B21B6; }
+  /* Variacao percentual */
+  .variacao-alta { color: #DC2626; }
+  /* Estado vazio */
+  .empty-state {
+    text-align: center;
+    color: #6B7280;
+    padding: 32px;
+    font-style: italic;
+  }
+  /* Flags fornecedores */
+  .flag-nova { background: #FEF3C7; color: #92400E; }
+  .flag-irregular { background: #FEE2E2; color: #991B1B; }
+  /* Rodapé */
+  footer {
+    border-top: 1px solid #e5e7eb;
+    padding: 16px 0;
+    margin-top: 32px;
+    font-size: 12px;
+    color: #6B7280;
+  }
+  footer a { color: #1D4ED8; text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 1. Header -->
+  <div class="header">
+    <h1>Relatório de Alertas de Sobrepreço — Medicamentos SUS</h1>
+    <p class="subtitle">Município de Sorocaba · Ano {{ ano }} · Gerado em {{ gerado_em }}</p>
+  </div>
+
+  <!-- 2. Disclaimer Legal -->
+  <div class="disclaimer">
+    Este relatório apresenta alertas para investigação, não conclusões de ilegalidade.
+    Os dados são públicos e provêm do Portal de Transparência de Sorocaba e do BPS/Ministério da Saúde.
+  </div>
+
+  <!-- 3. Narrativa IA (condicional) -->
+  {% if narrativa_ia %}
+  <div class="narrativa-ia">
+    <div class="label">Análise Gerada por IA</div>
+    <div class="narrativa-texto">{{ narrativa_ia | e }}</div>
+  </div>
+  {% endif %}
+
+  <!-- 4. Cards de Resumo -->
+  <div class="cards-grid">
+    <div class="card">
+      <div class="numero">{{ totais.empenhos_analisados }}</div>
+      <div class="label">Empenhos analisados</div>
+    </div>
+    <div class="card">
+      <div class="numero{% if totais.alertas_criticos > 0 %} critico{% endif %}">{{ totais.alertas_criticos }}</div>
+      <div class="label">Alertas CRÍTICOS</div>
+    </div>
+    <div class="card">
+      <div class="numero">R$ {{ "%.2f"|format(totais.valor_total_excedente) }}</div>
+      <div class="label">Valor total excedente (R$)</div>
+    </div>
+    <div class="card">
+      <div class="numero">{{ totais.fornecedores_suspeitos }}</div>
+      <div class="label">Fornecedores suspeitos</div>
+    </div>
+  </div>
+
+  <!-- 5. Tabela de Alertas -->
+  <h2 class="section-title">Alertas de Sobrepreço</h2>
+
+  <!-- 6. Botão Download CSV -->
+  <div class="download-area">
+    <a href="{{ csv_data_uri }}" download="alertas_{{ ano }}.csv" class="btn-download">
+      Baixar CSV completo ({{ csv_tamanho_kb }} KB)
+    </a>
+  </div>
+
+  {% if alertas %}
+  <table id="alerts">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)" scope="col">Item <span class="sort-icon" id="si-0">↕</span></th>
+        <th onclick="sortTable(1)" scope="col">Fornecedor <span class="sort-icon" id="si-1">↕</span></th>
+        <th onclick="sortTable(2)" scope="col">CNPJ <span class="sort-icon" id="si-2">↕</span></th>
+        <th onclick="sortTable(3)" scope="col">Preço Pago <span class="sort-icon" id="si-3">↕</span></th>
+        <th onclick="sortTable(4)" scope="col">Preço BPS <span class="sort-icon" id="si-4">↕</span></th>
+        <th onclick="sortTable(5)" scope="col">Desvio % <span class="sort-icon" id="si-5">↕</span></th>
+        <th onclick="sortTable(6)" scope="col">Tier <span class="sort-icon" id="si-6">↕</span></th>
+        <th onclick="sortTable(7)" scope="col">Val. Excedente <span class="sort-icon" id="si-7">↕</span></th>
+        <th onclick="sortTable(8)" scope="col">Narrativa IA <span class="sort-icon" id="si-8">↕</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in alertas %}
+      <tr>
+        <td data-val="{{ row.item | default(row.descricao_item, true) | default('') }}">{{ row.item | default(row.descricao_item, true) | default('') }}</td>
+        <td data-val="{{ row.fornecedor | default(row.nome_fornecedor, true) | default('') }}">{{ row.fornecedor | default(row.nome_fornecedor, true) | default('') }}</td>
+        <td data-val="{{ row.cnpj | default(row.cnpj_fornecedor, true) | default('') }}">{{ row.cnpj | default(row.cnpj_fornecedor, true) | default('') }}</td>
+        <td class="right" data-val="{{ row.preco_pago | default(row.preco_unitario_pago, true) | default(0) }}">R$ {{ "%.2f"|format(row.preco_pago | default(row.preco_unitario_pago, true) | float) }}</td>
+        <td class="right" data-val="{{ row.preco_bps | default(row.preco_bps_mediana, true) | default(0) }}">R$ {{ "%.2f"|format(row.preco_bps | default(row.preco_bps_mediana, true) | float) }}</td>
+        <td class="right{% if (row.desvio_pct | default(row.variacao_percentual, true) | float) > 100 %} variacao-alta{% endif %}" data-val="{{ row.desvio_pct | default(row.variacao_percentual, true) | default(0) }}">
+          {% set desvio = row.desvio_pct | default(row.variacao_percentual, true) | float %}
+          {% if desvio > 0 %}+{% endif %}{{ "%.1f"|format(desvio) }}%
+        </td>
+        <td data-val="{{ row.tier | default(row.nivel_alerta, true) | default('') }}">
+          {% set tier_val = row.tier | default(row.nivel_alerta, true) | default('') %}
+          {% if tier_val == 'CRÍTICO' %}
+            <span class="badge badge-critico" aria-label="Nível: CRÍTICO">CRÍTICO</span>
+          {% elif tier_val == 'ALERTA' %}
+            <span class="badge badge-alerta" aria-label="Nível: ALERTA">ALERTA</span>
+          {% elif tier_val == 'ATENÇÃO' %}
+            <span class="badge badge-atencao" aria-label="Nível: ATENÇÃO">ATENÇÃO</span>
+          {% else %}
+            <span class="badge badge-sem-referencia" aria-label="Nível: {{ tier_val }}">{{ tier_val }}</span>
+          {% endif %}
+        </td>
+        <td class="col-valor" data-val="{{ row.valor_excedente | default(row.valor_excedente_total, true) | default(0) }}">
+          R$ {{ "%.2f"|format(row.valor_excedente | default(row.valor_excedente_total, true) | float) }}
+        </td>
+        <td data-val="{{ row.narrativa_ia | default('') }}">
+          {% set narr = row.narrativa_ia | default('') | string %}
+          {% if narr %}
+            <span title="{{ narr }}">{{ narr[:80] }}{% if narr|length > 80 %}...{% endif %}</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-state">Nenhum alerta encontrado para os parâmetros analisados.</p>
+  {% endif %}
+
+  <!-- 7. Seção de Fornecedores Suspeitos -->
+  <h2 class="section-title">Fornecedores com Concentração de Alertas</h2>
+
+  {% if fornecedores %}
+  <table id="suppliers">
+    <thead>
+      <tr>
+        <th scope="col">Razão Social</th>
+        <th scope="col">CNPJ</th>
+        <th scope="col">Total Alertas</th>
+        <th scope="col">Alertas Críticos</th>
+        <th scope="col">Valor Excedente</th>
+        <th scope="col">Flags</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for f in fornecedores %}
+      <tr>
+        <td>{{ f.nome_fornecedor | default('') }}</td>
+        <td>{{ f.cnpj_fornecedor | default('') }}</td>
+        <td class="right" data-val="{{ f.total_alertas | default(0) }}">{{ f.total_alertas | default(0) }}</td>
+        <td class="right" data-val="{{ f.alertas_criticos | default(0) }}">{{ f.alertas_criticos | default(0) }}</td>
+        <td class="col-valor" data-val="{{ f.valor_excedente_total | default(0) }}">
+          R$ {{ "%.2f"|format(f.valor_excedente_total | default(0) | float) }}
+        </td>
+        <td>
+          {% if f.flag_empresa_nova %}
+            <span class="badge flag-nova">Empresa nova (&lt; 2 anos)</span>
+          {% endif %}
+          {% if f.flag_situacao_irregular %}
+            <span class="badge flag-irregular">Situação irregular</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty-state">Nenhum fornecedor atingiu os critérios de risco nesta análise.</p>
+  {% endif %}
+
+  <!-- 8. Rodapé -->
+  <footer>
+    <p>Fontes: Portal de Transparência de Sorocaba · BPS/Ministério da Saúde · CATMAT/ComprasNet</p>
+    <p><a href="docs/METODOLOGIA.md">Ver metodologia completa</a></p>
+  </footer>
+
+</div>
+
+<script>
+const ALERTAS = {{ alertas | tojson }};
+const FORNECEDORES = {{ fornecedores | tojson }};
+
+let _sortDir = {col: 7, dir: -1}; // padrão: valor_excedente DESC
+
+function sortTable(col) {
+  const dir = (_sortDir.col === col) ? -_sortDir.dir : -1;
+  _sortDir = {col: col, dir: dir};
+  const tbody = document.querySelector('#alerts tbody');
+  if (!tbody) return;
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+  rows.sort(function(a, b) {
+    const va = a.cells[col] ? (a.cells[col].dataset.val !== undefined ? a.cells[col].dataset.val : a.cells[col].textContent) : '';
+    const vb = b.cells[col] ? (b.cells[col].dataset.val !== undefined ? b.cells[col].dataset.val : b.cells[col].textContent) : '';
+    const na = parseFloat(va), nb = parseFloat(vb);
+    if (!isNaN(na) && !isNaN(nb)) return dir * (na - nb);
+    return dir * String(va).localeCompare(String(vb), 'pt-BR');
+  });
+  rows.forEach(function(r) { tbody.appendChild(r); });
+  // Atualizar ícones de ordenação
+  const icons = document.querySelectorAll('.sort-icon');
+  icons.forEach(function(icon, i) {
+    if (i === col) {
+      icon.textContent = dir === -1 ? '▼' : '▲';
+      icon.classList.add('active');
+    } else {
+      icon.textContent = '↕';
+      icon.classList.remove('active');
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  sortTable(7); // ordenar por valor_excedente DESC por padrão
+});
+</script>
+</body>
+</html>
