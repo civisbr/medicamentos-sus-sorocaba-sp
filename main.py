@@ -189,10 +189,20 @@ def main(municipio, ano, threshold, step, skip_ai, output):
         with open(summary_file) as f:
             s = json.load(f)
         totais = s.get("totais", {})
+        cobertura = s.get("cobertura_bps_pct", 0.0)
+        no_match = round(100.0 - cobertura, 1)
+        n = s.get("total_itens", totais.get("empenhos_analisados", "?"))
         console.print(f"\n[bold]Resumo:[/bold]")
         console.print(f"   Empenhos analisados: {totais.get('empenhos_analisados', '?')}")
         console.print(f"   Alertas CRÍTICOS: {totais.get('alertas_criticos', '?')}")
         console.print(f"   Valor total excedente: R$ {totais.get('valor_total_excedente', '?')}")
+        console.print(f"   Items: {n} | BPS match: {cobertura:.1f}% | No match: {no_match:.1f}%")
+        if isinstance(cobertura, (int, float)) and cobertura < 50:
+            console.print(
+                "[bold yellow][WARNING][/bold yellow] "
+                f"Cobertura BPS {cobertura:.1f}% abaixo de 50% — "
+                "análise de preços pouco representativa para este conjunto de dados."
+            )
 
 
 if __name__ == "__main__":
