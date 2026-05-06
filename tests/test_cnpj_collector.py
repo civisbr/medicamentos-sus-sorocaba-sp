@@ -12,6 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import src.collectors.cnpj_collector as cnpj_module
 from src.collectors.cnpj_collector import CNPJCollector, avaliar_risco_cnpj_standalone
 
 
@@ -80,7 +81,10 @@ class TestEmpresaNovaBool:
         output_file = tmp_path / "fornecedores.json"
 
         coletor = CNPJCollector()
-        with patch.object(coletor, "consultar", return_value=dados_cnpj):
+        # Mockar carregar_cache() para evitar que cache de disco interfira nos testes
+        with patch.object(coletor, "consultar", return_value=dados_cnpj), \
+             patch.object(cnpj_module, "carregar_cache", return_value={}), \
+             patch.object(cnpj_module, "salvar_cache"):
             resultado = coletor.enriquecer_fornecedores(
                 input_file=str(input_file),
                 output_file=str(output_file),
@@ -173,7 +177,10 @@ class TestMergePorCNPJ:
         input_file.write_text(json.dumps(empenhos), encoding="utf-8")
 
         coletor = CNPJCollector()
-        with patch.object(coletor, "consultar", return_value=None):
+        # Mockar carregar_cache() para evitar que cache de disco interfira nos testes
+        with patch.object(coletor, "consultar", return_value=None), \
+             patch.object(cnpj_module, "carregar_cache", return_value={}), \
+             patch.object(cnpj_module, "salvar_cache"):
             return coletor.enriquecer_fornecedores(
                 input_file=str(input_file),
                 output_file=str(output_file),
@@ -216,7 +223,9 @@ class TestMergePorCNPJ:
 
         dados_novos = {"cnpj": self.CNPJ_A, "razao_social": "FARMACIA ATUALIZADA LTDA"}
         coletor = CNPJCollector()
-        with patch.object(coletor, "consultar", return_value=dados_novos):
+        with patch.object(coletor, "consultar", return_value=dados_novos), \
+             patch.object(cnpj_module, "carregar_cache", return_value={}), \
+             patch.object(cnpj_module, "salvar_cache"):
             coletor.enriquecer_fornecedores(
                 input_file=str(input_file),
                 output_file=str(output_file),
