@@ -168,17 +168,38 @@ class CNPJCollector:
             resultado.append({
                 "cnpj": cnpj,
                 "dados_api": dados_api,
-                "flags_risco": flags,
+                "flags_risco": flags,                       # mantido para compatibilidade com supplier_analyzer.py
+                "empresa_nova": "empresa_nova" in flags,    # STAB-03: booleano explícito
                 "data_empenho_referencia": data_empenho,
             })
 
-        Path(output_file).parent.mkdir(parents=True, exist_ok=True)
-        Path(output_file).write_text(
-            json.dumps(resultado, ensure_ascii=False, indent=2),
+        output_path = Path(output_file)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Carregar existentes para merge (preserva CNPJs de iterações anteriores — STAB-05)
+        existentes_por_cnpj: dict[str, dict] = {}
+        if output_path.exists():
+            try:
+                existentes = json.loads(output_path.read_text(encoding="utf-8"))
+                existentes_por_cnpj = {e["cnpj"]: e for e in existentes if "cnpj" in e}
+            except (json.JSONDecodeError, KeyError, TypeError) as e:
+                logger.warning("Arquivo de fornecedores existente inválido, iniciando do zero: %s", e)
+
+        # Merge: novo sobrescreve existente (dados mais recentes prevalecem)
+        for entry in resultado:
+            existentes_por_cnpj[entry["cnpj"]] = entry
+
+        merged = list(existentes_por_cnpj.values())
+
+        output_path.write_text(
+            json.dumps(merged, ensure_ascii=False, indent=2),
             encoding="utf-8"
         )
-        console.print(f"[green]Fornecedores enriquecidos:[/green] {output_file} ({len(resultado)} CNPJs)")
-        return resultado
+        console.print(
+            f"[green]Fornecedores enriquecidos:[/green] {output_file} "
+            f"({len(merged)} CNPJs total, {len(resultado)} novos/atualizados)"
+        )
+        return resultado  # retorna apenas os processados nesta chamada (não o merged completo)
 
     def avaliar_risco_cnpj(self, dados_cnpj: dict, data_contrato: str) -> list[str]:
         """
@@ -228,3 +249,8 @@ class CNPJCollector:
                 logger.debug("Erro ao calcular empresa_nova para %s: %s", data_abertura_str, e)
 
         return flags
+
+
+def avaliar_risco_cnpj_standalone(dados_cnpj: dict, data_contrato: str) -> list[str]:
+    """Wrapper standalone de CNPJCollector.avaliar_risco_cnpj() para uso em testes."""
+    return CNPJCollector().avaliar_risco_cnpj(dados_cnpj, data_contrato)
