@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** — Phases 0–4 (shipped 2026-05-06) — [archive](.planning/milestones/v1.0-ROADMAP.md)
-- 🚧 **v1.1 Estabilização** — Phases 5–6 (em progresso)
+- ✅ **v1.1 Estabilização** — Phases 5–6 (shipped 2026-05-06)
 
 ## Phases
 
