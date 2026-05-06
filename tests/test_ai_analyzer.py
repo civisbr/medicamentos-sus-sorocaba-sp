@@ -301,3 +301,47 @@ class TestAIAnalyzerAnalisar:
 
         assert result is not None
         assert expected_text in result
+
+
+# ---------------------------------------------------------------------------
+# TestThresholdPropagado
+# ---------------------------------------------------------------------------
+
+class TestThresholdPropagado:
+    """Verifica que o parâmetro threshold chega ao prompt enviado para Claude."""
+
+    def _capturar_prompt(self, monkeypatch, tmp_path, threshold_value: int) -> str:
+        """Helper: executa analisar() e retorna o conteúdo do prompt capturado."""
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-valid-key")
+        alertas_file = str(_make_alertas_csv(tmp_path))
+        output_file = str(tmp_path / "analise_ia.md")
+        captured = {}
+
+        def capture_create(**kwargs):
+            msgs = kwargs.get("messages", [])
+            if msgs:
+                captured["content"] = msgs[0].get("content", "")
+            return _make_mock_message()
+
+        with patch("anthropic.Anthropic") as mock_anthropic_cls:
+            mock_client = MagicMock()
+            mock_anthropic_cls.return_value = mock_client
+            mock_client.messages.create.side_effect = capture_create
+            ai = AIAnalyzer()
+            ai.analisar(alertas_file, output_file, threshold=threshold_value)
+
+        return captured.get("content", "")
+
+    def test_threshold_20_aparece_no_prompt(self, monkeypatch, tmp_path):
+        """Quando threshold=20, o prompt deve conter '20%'."""
+        content = self._capturar_prompt(monkeypatch, tmp_path, threshold_value=20)
+        assert "20%" in content, (
+            f"Esperado '20%' no prompt mas não encontrado. Prompt (100 chars): {content[:100]}"
+        )
+
+    def test_threshold_50_aparece_no_prompt(self, monkeypatch, tmp_path):
+        """Quando threshold=50, o prompt deve conter '50%'."""
+        content = self._capturar_prompt(monkeypatch, tmp_path, threshold_value=50)
+        assert "50%" in content, (
+            f"Esperado '50%' no prompt mas não encontrado. Prompt (100 chars): {content[:100]}"
+        )
