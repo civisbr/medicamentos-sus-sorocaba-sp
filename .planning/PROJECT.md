@@ -15,22 +15,22 @@ evidências concretas para investigação ou denúncia.
 
 **Um pipeline executável de ponta a ponta que transforma dados públicos brutos em alertas de superfaturamento prontos para investigação** — o mínimo indispensável é: coletar → normalizar → analisar → exportar CSV com alertas classificados.
 
-## Current Milestone: v1.1 Estabilização — SHIPPED
+## Latest Milestone: v1.1 Estabilização — ARCHIVED
 
 **Goal:** Fechar todos os gaps técnicos do v1.0 e elevar a qualidade observável dos dados gerados.
 
-**Status:** ✅ Completo — shipped 2026-05-06 (Phases 5–6)
+**Status:** ✅ Arquivado — shipped 2026-05-06 (Phases 5–6) | Próximo: `/gsd-new-milestone` para v2
 
 ## Current State
 
 **Versão:** v1.1 Estabilização (shipped 2026-05-06)
-**Código:** ~5.400 linhas Python/HTML/J2 | **Testes:** 94/94 passando
+**Código:** ~4.479 linhas Python (produção + testes) | **Testes:** 94/94 passando
 **Stack:** Python 3.11+, pandas 2.2.x, rapidfuzz, anthropic≥0.40.0, click, jinja2, rich, playwright
 
-Pipeline executável de ponta a ponta. Todos os módulos implementados (sem `NotImplementedError`).
-Testes TDD cobrindo todas as fases. Relatório HTML, CSV e dashboard gerados com dados de fixture.
-Coleta de dados reais requer verificação com internet (BPS URL dinâmica; TCE-SP fixture mode).
-summary.json inclui métricas de qualidade de dados (total_itens, cobertura_bps_pct, alertas_por_tier).
+Pipeline executável de ponta a ponta. Todos os módulos implementados. Coletores com fallback
+headless (BPS) e modo fixture (TCE-SP). summary.json inclui métricas de cobertura BPS
+(`total_itens`, `cobertura_bps_pct`, `alertas_por_tier`). VALIDATION.md retroativos criados para
+fases 0, 1 e 3. Coleta de dados reais requer acesso à internet; testes passam com fixtures.
 
 ## Requirements
 
@@ -119,4 +119,4 @@ Este documento evolui a cada transição de fase e milestone.
 4. Requirements implementados → Mover para Validated
 
 ---
-*Last updated: 2026-05-06 — Milestone v1.1 Estabilização shipped*
+*Last updated: 2026-05-06 — Milestone v1.1 Estabilização archived*

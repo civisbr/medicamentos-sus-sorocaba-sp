@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
 milestone: v1.1
-milestone_name: Estabilização — Phase Details
-status: milestone_complete
+milestone_name: Estabilização
+status: archived
 stopped_at: ~
 last_updated: "2026-05-06T00:00:00.000Z"
-last_activity: 2026-05-06 — Phase 6 verified (3/3 must-haves, human UAT approved) — milestone v1.1 complete
+last_activity: 2026-05-06 — Milestone v1.1 archived — ready for /gsd-new-milestone
 progress:
   total_phases: 2
   completed_phases: 2
@@ -21,14 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-05-06)
 
 **Core value:** Pipeline executável de ponta a ponta que transforma dados públicos brutos em alertas de superfaturamento prontos para investigação — coletar → normalizar → analisar → exportar CSV com alertas classificados.
-**Current focus:** v1.1 Estabilização — COMPLETO. Milestone shipped 2026-05-06.
+**Current focus:** Milestone v1.1 arquivado 2026-05-06. Próximo passo: /gsd-new-milestone para v2.
 
 ## Current Position
 
-Phase: 6 — Validation & Data Quality (COMPLETE)
-Plan: 2/2 planos completos
-Status: Milestone v1.1 complete — ready for /gsd-complete-milestone
-Last activity: 2026-05-06 — Phase 6 verified (3/3 must-haves, human UAT approved)
+Phase: — (milestone completo e arquivado)
+Status: Milestone v1.1 archived — ready for /gsd-new-milestone
+Last activity: 2026-05-06 — Milestone v1.1 Estabilização archived (Phases 5–6, 5 plans, 94 tests)
 
 ## Deferred Items
 
@@ -41,6 +40,6 @@ Last activity: 2026-05-06 — Phase 6 verified (3/3 must-haves, human UAT approv
 
 ## Session Continuity
 
-Last session: 2026-05-06T17:32:40.137Z
-Stopped at: context exhaustion at 75% (2026-05-06)
+Last session: 2026-05-06
+Stopped at: milestone complete and archived
 Resume file: None
