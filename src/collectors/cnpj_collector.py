@@ -228,3 +228,8 @@ class CNPJCollector:
                 logger.debug("Erro ao calcular empresa_nova para %s: %s", data_abertura_str, e)
 
         return flags
+
+
+def avaliar_risco_cnpj_standalone(dados_cnpj: dict, data_contrato: str) -> list[str]:
+    """Wrapper standalone de CNPJCollector.avaliar_risco_cnpj() para uso em testes."""
+    return CNPJCollector().avaliar_risco_cnpj(dados_cnpj, data_contrato)
