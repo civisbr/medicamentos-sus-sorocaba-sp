@@ -127,7 +127,10 @@ def main(municipio, ano, threshold, step, skip_ai, output):
             try:
                 narrativa = ai.analisar(
                     alertas_file=str(ROOT / "data/reports/alertas_superfaturamento.csv"),
-                    output_file=str(ROOT / "data/reports/analise_ia.md")
+                    output_file=str(ROOT / "data/reports/analise_ia.md"),
+                    threshold=threshold,
+                    periodo=str(anos[0]),
+                    municipio=municipio,
                 )
             except Exception as e:
                 console.print(f"[yellow]Análise IA falhou ({e}) — continuando sem narrativa[/yellow]")
