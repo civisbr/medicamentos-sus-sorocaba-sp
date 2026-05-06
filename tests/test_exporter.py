@@ -469,3 +469,86 @@ class TestGerarSummary:
         assert saved == result or saved.keys() == result.keys(), (
             "Conteúdo do arquivo salvo difere do dict retornado"
         )
+
+    def test_summary_json_sem_nan(self, tmp_path):
+        """BLOCKER-1: summary.json não deve conter literais NaN (JSON inválido para browser)."""
+        from src.utils.exporter import Exporter
+        e = Exporter()
+
+        # Dados com SEM_REFERÊNCIA → preco_bps_mediana e variacao_percentual ficam NaN
+        dados = [
+            {
+                "nr_empenho": "EMP-001",
+                "data_empenho": "2023-01-01",
+                "descricao_item": "AMOXICILINA 500MG",
+                "catmat_codigo": None,
+                "cnpj_fornecedor": "12.345.678/0001-99",
+                "nome_fornecedor": "FARMACIA A",
+                "preco_unitario_pago": 5.0,
+                "preco_bps_mediana": float("nan"),
+                "variacao_percentual": float("nan"),
+                "nivel_alerta": "SEM_REFERÊNCIA",
+                "valor_excedente_total": 0.0,
+                "qt_registros_bps": 0,
+            }
+        ]
+        csv_path = tmp_path / "alertas_nan.csv"
+        pd.DataFrame(dados).to_csv(str(csv_path), index=False)
+        output = str(tmp_path / "summary_nan.json")
+
+        e.gerar_summary(alertas_file=str(csv_path), output_file=output, ano=2023)
+
+        raw = pathlib.Path(output).read_text(encoding="utf-8")
+        assert "NaN" not in raw, f"Literal NaN encontrado no JSON: {raw}"
+        # Deve ser JSON válido (não lança exceção)
+        parsed = json.loads(raw)
+        assert "top_itens" in parsed
+
+    def test_nivel_risco_suspeito(self, tmp_path, alertas_csv_fixture):
+        """BLOCKER-2: nivel_risco deve ser 'SUSPEITO' para tier_suspeito=True, não 'True'."""
+        from src.utils.exporter import Exporter
+        e = Exporter()
+
+        forn_dados = [
+            {
+                "cnpj_fornecedor": "12.345.001/0001-99",
+                "nome_fornecedor": "FARMACIA SUSPEITA",
+                "total_alertas": 5,
+                "alertas_criticos": 4,
+                "score_risco": 0.9,
+                "tier_suspeito": True,
+                "valor_excedente_total": 900000.0,
+                "flag_empresa_nova": False,
+                "flag_situacao_irregular": False,
+                "data_abertura_cnpj": "2023-01-01",
+            },
+            {
+                "cnpj_fornecedor": "12.345.002/0001-99",
+                "nome_fornecedor": "FARMACIA NORMAL",
+                "total_alertas": 1,
+                "alertas_criticos": 0,
+                "score_risco": 0.1,
+                "tier_suspeito": False,
+                "valor_excedente_total": 100000.0,
+                "flag_empresa_nova": False,
+                "flag_situacao_irregular": False,
+                "data_abertura_cnpj": "2020-01-01",
+            },
+        ]
+        forn_csv = tmp_path / "forn.csv"
+        pd.DataFrame(forn_dados).to_csv(str(forn_csv), index=False)
+        output = str(tmp_path / "summary_risco.json")
+
+        summary = e.gerar_summary(
+            alertas_file=alertas_csv_fixture,
+            output_file=output,
+            ano=2023,
+            fornecedores_file=str(forn_csv),
+        )
+
+        nivel_suspeito = summary["top_fornecedores"][0]["nivel_risco"]
+        nivel_ok = summary["top_fornecedores"][1]["nivel_risco"]
+        assert nivel_suspeito == "SUSPEITO", (
+            f"Esperado 'SUSPEITO', obtido '{nivel_suspeito}'"
+        )
+        assert nivel_ok == "OK", f"Esperado 'OK', obtido '{nivel_ok}'"

@@ -8,6 +8,7 @@ Exporta os resultados da análise em múltiplos formatos:
 
 import io
 import json
+import math
 import urllib.parse
 import pandas as pd
 from datetime import datetime
@@ -49,6 +50,17 @@ DISCLAIMER = (
     "Gerado por MedAudit SUS. "
     "Este arquivo apresenta alertas para investigação, não conclusões de ilegalidade."
 )
+
+
+def _safe_float(v) -> Optional[float]:
+    """Converte v para float, retornando None para NaN/None (serializa como JSON null)."""
+    if v is None:
+        return None
+    try:
+        f = float(v)
+        return None if math.isnan(f) else f
+    except (TypeError, ValueError):
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -158,10 +170,10 @@ class Exporter:
             for _, row in top_df.iterrows():
                 top_itens.append({
                     "descricao": str(row.get("descricao_item", "")),
-                    "preco_pago": float(row.get("preco_unitario_pago", 0) or 0),
-                    "preco_bps": float(row.get("preco_bps_mediana", 0) or 0),
-                    "variacao": float(row.get("variacao_percentual", 0) or 0),
-                    "valor_excedente_total": float(row.get("valor_excedente_total", 0) or 0),
+                    "preco_pago": _safe_float(row.get("preco_unitario_pago")),
+                    "preco_bps": _safe_float(row.get("preco_bps_mediana")),
+                    "variacao": _safe_float(row.get("variacao_percentual")),
+                    "valor_excedente_total": _safe_float(row.get("valor_excedente_total")),
                     "nivel": str(row.get("nivel_alerta", "")),
                 })
 
@@ -175,7 +187,7 @@ class Exporter:
                     "razao_social": str(row.get("nome_fornecedor", "")),
                     "total_alertas": int(row.get("total_alertas", 0) or 0),
                     "valor_excedente_total": float(row.get("valor_excedente_total", 0) or 0),
-                    "nivel_risco": str(row.get("tier_suspeito", "")),
+                    "nivel_risco": "SUSPEITO" if row.get("tier_suspeito") else "OK",
                 })
         elif not alertas_df.empty and "cnpj_fornecedor" in alertas_df.columns:
             # Fallback: calcular agrupando alertas por CNPJ
