@@ -552,3 +552,81 @@ class TestGerarSummary:
             f"Esperado 'SUSPEITO', obtido '{nivel_suspeito}'"
         )
         assert nivel_ok == "OK", f"Esperado 'OK', obtido '{nivel_ok}'"
+
+    def test_total_itens(self, alertas_csv_fixture, tmp_path):
+        """total_itens deve conter o número total de linhas no CSV de alertas."""
+        from src.utils.exporter import Exporter
+        exporter = Exporter()
+        out = tmp_path / "summary.json"
+        result = exporter.gerar_summary(
+            alertas_file=str(alertas_csv_fixture),
+            output_file=str(out),
+            ano=2023,
+        )
+        assert "total_itens" in result, "Campo total_itens ausente na raiz do summary"
+        assert isinstance(result["total_itens"], int), "total_itens deve ser int"
+        assert result["total_itens"] > 0
+
+    def test_cobertura_bps_pct(self, tmp_path):
+        """cobertura_bps_pct deve ser float entre 0 e 100 representando % com match BPS."""
+        # Criar CSV com 4 alertas: 2 SEM_REFERÊNCIA, 1 ATENÇÃO, 1 CRÍTICO
+        csv_content = (
+            "nivel_alerta,valor_excedente_total,descricao_item\n"
+            "SEM_REFERÊNCIA,0.0,Medicamento A\n"
+            "SEM_REFERÊNCIA,0.0,Medicamento B\n"
+            "ATENÇÃO,500.0,Medicamento C\n"
+            "CRÍTICO,1000.0,Medicamento D\n"
+        )
+        alertas_path = tmp_path / "alertas.csv"
+        alertas_path.write_text(csv_content, encoding="utf-8")
+        out = tmp_path / "summary.json"
+        from src.utils.exporter import Exporter
+        exporter = Exporter()
+        result = exporter.gerar_summary(
+            alertas_file=str(alertas_path),
+            output_file=str(out),
+            ano=2023,
+        )
+        assert "cobertura_bps_pct" in result, "Campo cobertura_bps_pct ausente na raiz do summary"
+        assert isinstance(result["cobertura_bps_pct"], (int, float)), "cobertura_bps_pct deve ser numérico"
+        assert result["cobertura_bps_pct"] == 50.0, f"Esperado 50.0, obtido {result['cobertura_bps_pct']}"
+
+    def test_alertas_por_tier(self, tmp_path):
+        """alertas_por_tier deve ser dict com contagem por valor de nivel_alerta."""
+        csv_content = (
+            "nivel_alerta,valor_excedente_total,descricao_item\n"
+            "SEM_REFERÊNCIA,0.0,Med A\n"
+            "ATENÇÃO,100.0,Med B\n"
+            "ATENÇÃO,200.0,Med C\n"
+            "CRÍTICO,900.0,Med D\n"
+        )
+        alertas_path = tmp_path / "alertas.csv"
+        alertas_path.write_text(csv_content, encoding="utf-8")
+        out = tmp_path / "summary.json"
+        from src.utils.exporter import Exporter
+        exporter = Exporter()
+        result = exporter.gerar_summary(
+            alertas_file=str(alertas_path),
+            output_file=str(out),
+            ano=2023,
+        )
+        assert "alertas_por_tier" in result, "Campo alertas_por_tier ausente na raiz do summary"
+        tier = result["alertas_por_tier"]
+        assert isinstance(tier, dict), "alertas_por_tier deve ser dict"
+        assert tier.get("ATENÇÃO") == 2, f"Esperado ATENÇÃO=2, obtido {tier.get('ATENÇÃO')}"
+        assert tier.get("CRÍTICO") == 1, f"Esperado CRÍTICO=1, obtido {tier.get('CRÍTICO')}"
+        assert tier.get("SEM_REFERÊNCIA") == 1, f"Esperado SEM_REFERÊNCIA=1, obtido {tier.get('SEM_REFERÊNCIA')}"
+
+    def test_cobertura_bps_df_vazio(self, tmp_path):
+        """DataFrame vazio (arquivo ausente) → cobertura_bps_pct=0.0 e alertas_por_tier={}."""
+        out = tmp_path / "summary.json"
+        from src.utils.exporter import Exporter
+        exporter = Exporter()
+        result = exporter.gerar_summary(
+            alertas_file=str(tmp_path / "inexistente.csv"),
+            output_file=str(out),
+            ano=2023,
+        )
+        assert result.get("cobertura_bps_pct") == 0.0, "DataFrame vazio deve retornar cobertura_bps_pct=0.0"
+        assert result.get("alertas_por_tier") == {}, "DataFrame vazio deve retornar alertas_por_tier={}"
+        assert result.get("total_itens") == 0, "DataFrame vazio deve retornar total_itens=0"
