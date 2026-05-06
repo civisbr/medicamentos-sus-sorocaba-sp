@@ -15,6 +15,13 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 from rich.console import Console
 
+try:
+    from playwright.sync_api import sync_playwright
+    _PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    _PLAYWRIGHT_AVAILABLE = False
+    sync_playwright = None  # type: ignore[assignment]
+
 ROOT = Path(__file__).parent.parent.parent
 BPS_DATASET_PAGE = "https://dadosabertos.saude.gov.br/dataset/bps"
 OUTPUT_DEFAULT = ROOT / "data" / "raw" / "bps_precos_referencia.csv"
@@ -44,7 +51,7 @@ def _criar_session() -> requests.Session:
 def _descobrir_url_csv(session: requests.Session, ano: int) -> str:
     """
     Parseia a pagina do dataset BPS e retorna a URL do CSV para o ano solicitado.
-    Se nenhum link com o ano for encontrado, retorna o link CSV mais recente.
+    Se nenhum link com o ano for encontrado via requests+regex, usa fallback Playwright.
     """
     resp = session.get(BPS_DATASET_PAGE, timeout=30)
     resp.raise_for_status()
@@ -60,15 +67,72 @@ def _descobrir_url_csv(session: requests.Session, ano: int) -> str:
         url = csv_links[-1]
         logger.warning("CSV do ano %d nao encontrado; usando: %s", ano, url)
     else:
-        raise ValueError(
-            f"Nenhum link CSV encontrado na pagina {BPS_DATASET_PAGE}. "
-            "Verifique se o portal esta acessivel."
+        # Fallback: portal pode usar JS para gerar links — tentar headless
+        logger.warning(
+            "Nenhum link CSV encontrado via requests em %s. "
+            "Tentando fallback Playwright headless...",
+            BPS_DATASET_PAGE
         )
+        return _descobrir_url_csv_headless(ano)
 
     # Garantir URL absoluta
     if url.startswith("/"):
         url = "https://dadosabertos.saude.gov.br" + url
     return url
+
+
+def _descobrir_url_csv_headless(ano: int) -> str:
+    """
+    Fallback: usa Playwright headless para obter URL do CSV BPS
+    quando o portal renderiza links via JavaScript.
+
+    Args:
+        ano: Ano do dataset desejado
+
+    Returns:
+        URL absoluta do CSV BPS
+
+    Raises:
+        ValueError: quando nenhum link .csv é encontrado
+        ImportError: quando playwright não está instalado
+    """
+    if not _PLAYWRIGHT_AVAILABLE:
+        raise ImportError(
+            "playwright não está instalado. Execute: pip install playwright && "
+            "python -m playwright install chromium"
+        )
+
+    logger.info("Tentando descobrir URL BPS via Playwright headless (ano=%d)...", ano)
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        try:
+            page = browser.new_page()
+            page.goto(BPS_DATASET_PAGE, timeout=60000)
+            # Aguarda carregamento completo do DOM (mais confiável que networkidle em portais
+            # com analytics/tracking que podem nunca atingir networkidle)
+            page.wait_for_load_state("domcontentloaded", timeout=30000)
+            # Tenta aguardar link CSV aparecer (timeout curto — se não aparecer, usa o que tem)
+            try:
+                page.wait_for_selector("a[href*='.csv']", timeout=15000)
+            except Exception:
+                pass  # Continua mesmo sem o seletor — eval_on_selector_all retornará []
+            links = page.eval_on_selector_all(
+                "a[href*='.csv']",
+                "els => els.map(el => el.href)"
+            )
+        finally:
+            browser.close()
+
+    if not links:
+        raise ValueError(
+            f"Nenhum CSV encontrado via headless browser em {BPS_DATASET_PAGE}. "
+            "Verifique se o portal está acessível e se o playwright chromium está instalado."
+        )
+
+    # Preferir link com o ano solicitado; fallback: último link disponível
+    ano_links = [lnk for lnk in links if str(ano) in lnk]
+    return ano_links[0] if ano_links else links[-1]
 
 
 def _baixar_csv(url: str, session: requests.Session) -> pd.DataFrame:
