@@ -216,6 +216,19 @@ class Exporter:
             "CRÍTICO": alertas_criticos,
         }
 
+        # Cálculo de cobertura BPS e contagem por tier (STAB-07)
+        total_itens = total_empenhos
+        if not alertas_df.empty and "nivel_alerta" in alertas_df.columns:
+            sem_ref = int((alertas_df["nivel_alerta"] == "SEM_REFERÊNCIA").sum())
+            com_bps = total_itens - sem_ref
+            cobertura_bps_pct = round((com_bps / total_itens) * 100, 1) if total_itens > 0 else 0.0
+            alertas_por_tier: dict = {
+                k: int(v) for k, v in alertas_df["nivel_alerta"].value_counts().items()
+            }
+        else:
+            cobertura_bps_pct = 0.0
+            alertas_por_tier = {}
+
         summary = {
             "gerado_em": datetime.now().isoformat(),
             "municipio": "Sorocaba",
@@ -232,6 +245,9 @@ class Exporter:
             "top_itens": top_itens,
             "top_fornecedores": top_fornecedores,
             "distribuicao_alertas": distribuicao,
+            "total_itens": total_itens,
+            "cobertura_bps_pct": cobertura_bps_pct,
+            "alertas_por_tier": alertas_por_tier,
         }
 
         # Salvar JSON
