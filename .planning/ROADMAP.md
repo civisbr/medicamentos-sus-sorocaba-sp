@@ -39,6 +39,12 @@ Plans:
 
 **Requirements:** STAB-06, STAB-07
 
+**Plans:** 2 plans
+
+Plans:
+- [ ] 06-01-PLAN.md — Criar VALIDATION.md retroativos para fases 0, 1 e 3 (STAB-06)
+- [ ] 06-02-PLAN.md — Estender gerar_summary() com total_itens/cobertura_bps_pct/alertas_por_tier + resumo BPS em main.py (STAB-07)
+
 **Success criteria:**
 1. Arquivos `.planning/phases/phase-0/VALIDATION.md`, `phase-1/VALIDATION.md` e `phase-3/VALIDATION.md` existem com critérios de sucesso e evidência de cobertura (STAB-06)
 2. Execução do pipeline imprime ao final: `Items: N | BPS match: X% | No match: Y%` e emite `[WARNING]` quando cobertura < 50% (STAB-07)
@@ -69,4 +75,4 @@ Full details: [.planning/milestones/v1.0-ROADMAP.md](.planning/milestones/v1.0-R
 | 3. Analysis | v1.0 | 3/3 | Complete | 2026-05-05 |
 | 4. Export & Docs | v1.0 | 4/4 | Complete | 2026-05-05 |
 | 5. Bug Fixes & Collectors | v1.1 | 3/3 | Complete | 2026-05-06 |
-| 6. Validation & Data Quality | v1.1 | 0/1 | Pending | — |
+| 6. Validation & Data Quality | v1.1 | 0/2 | Pending | — |
